@@ -4,7 +4,7 @@ import "time"
 
 type Config struct {
 	Server ServerConfig
-	Backend BackendConfig
+	Backends []BackendConfig
 }
 
 type ServerConfig struct {
@@ -15,8 +15,9 @@ type ServerConfig struct {
 }
 	
 type BackendConfig struct {
+	ID string
 	BaseURL string
-	Timeout time.Duration
+	
 }
 
 func Load() *Config {
@@ -26,9 +27,9 @@ func Load() *Config {
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		},
-		Backend: BackendConfig{
-			BaseURL: "http://localhost:9000",
-			Timeout: 5 * time.Second,
+		Backends: []BackendConfig{
+			{ID:"backend-1", BaseURL: "http://localhost:9000"},
+			{ID: "backend-2", BaseURL: "http://localhost:9000"},
 		},
 	}
 }
