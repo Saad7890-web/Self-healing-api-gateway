@@ -3,19 +3,31 @@ package main
 import (
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/Saad7890-web/self-healing-gateway/internal/config"
 	"github.com/Saad7890-web/self-healing-gateway/internal/proxy"
+	"github.com/Saad7890-web/self-healing-gateway/internal/registry"
 )
 
 
 func main() {
 	cfg := config.Load()
-	p,err := proxy.New(cfg.Backend.BaseURL, cfg.Backend.Timeout)
+	reg := registry.New()
 
-	if err != nil {
-		log.Fatalf("Failed to create proxy: %v", err)
+	for _,b:= range cfg.Backends{
+		u,err := url.Parse(b.BaseURL)
+		if err != nil {
+			log.Fatalf("invalid backend url %s", b.BaseURL)
+		}
+
+		reg.Add(&registry.Service{
+			ID: b.ID,
+			URL: u,
+		})
 	}
+
+	p := proxy.New(reg, cfg.Server.WriteTimeout)
 
 	server := &http.Server{
 		Addr: cfg.Server.Port,

@@ -5,37 +5,42 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"time"
+
+	"github.com/Saad7890-web/self-healing-gateway/internal/registry"
 )
 
 type Proxy struct {
-	reverseProxy *httputil.ReverseProxy
+	registry *registry.Registry
+	timeout  time.Duration
 }
 
-func New(target string, timeout time.Duration)(*Proxy, error){
-	backendUrl, err := url.Parse(target)
-	if err != nil {
-		return nil, err
+func New(reg *registry.Registry, timeout time.Duration) *Proxy {
+	return &Proxy{
+		registry: reg,
+		timeout:  timeout,
 	}
-
-	rp := httputil.NewSingleHostReverseProxy(backendUrl)
-	rp.Transport = &http.Transport{
-		ResponseHeaderTimeout: timeout,
-	}
-
-	rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error){
-		log.Printf("Proxy error : %v", err)
-		http.Error(w, "Bad Gateway", http.StatusBadGateway)
-	}
-
-	return &Proxy{reverseProxy: rp}, nil
 }
 
-func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request){
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	services := p.registry.List()
+	if len(services) == 0 {
+		http.Error(w, "No backend available", http.StatusServiceUnavailable)
+		return
+	}
+
+	target := services[0] 
+
+	rp := httputil.NewSingleHostReverseProxy(target.URL)
+
+	rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		log.Printf("proxy error: %v", err)
+		http.Error(w, "Backend error", http.StatusBadGateway)
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), p.timeout)
 	defer cancel()
 
 	r = r.WithContext(ctx)
-	p.reverseProxy.ServeHTTP(w, r)
+	rp.ServeHTTP(w, r)
 }
