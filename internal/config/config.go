@@ -29,7 +29,7 @@ func Load() *Config {
 		},
 		Backends: []BackendConfig{
 			{ID:"backend-1", BaseURL: "http://localhost:9000"},
-			{ID: "backend-2", BaseURL: "http://localhost:9000"},
+			{ID: "backend-2", BaseURL: "http://localhost:9001"},
 		},
 	}
 }
