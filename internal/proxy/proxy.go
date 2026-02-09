@@ -7,31 +7,28 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"github.com/Saad7890-web/self-healing-gateway/internal/registry"
+	"github.com/Saad7890-web/self-healing-gateway/internal/balancer"
 )
 
 type Proxy struct {
-	registry *registry.Registry
+	balancer balancer.Balancer
 	timeout  time.Duration
 }
 
-func New(reg *registry.Registry, timeout time.Duration) *Proxy {
+func New(b balancer.Balancer, timeout time.Duration) *Proxy {
 	return &Proxy{
-		registry: reg,
+		balancer: b,
 		timeout:  timeout,
 	}
 }
 
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	services := p.registry.List()
-	if len(services) == 0 {
+	services, err := p.balancer.Next()
+	if err != nil {
 		http.Error(w, "No backend available", http.StatusServiceUnavailable)
-		return
 	}
 
-	target := services[0] 
-
-	rp := httputil.NewSingleHostReverseProxy(target.URL)
+	rp := httputil.NewSingleHostReverseProxy(services.URL)
 
 	rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 		log.Printf("proxy error: %v", err)
