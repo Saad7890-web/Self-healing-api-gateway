@@ -26,6 +26,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	services, err := p.balancer.Next()
 	if err != nil {
 		http.Error(w, "No backend available", http.StatusServiceUnavailable)
+		return
 	}
 
 	rp := httputil.NewSingleHostReverseProxy(services.URL)
