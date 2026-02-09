@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/Saad7890-web/self-healing-gateway/internal/balancer"
 	"github.com/Saad7890-web/self-healing-gateway/internal/config"
 	"github.com/Saad7890-web/self-healing-gateway/internal/proxy"
 	"github.com/Saad7890-web/self-healing-gateway/internal/registry"
@@ -26,8 +27,8 @@ func main() {
 			URL: u,
 		})
 	}
-
-	p := proxy.New(reg, cfg.Server.WriteTimeout)
+	rr := balancer.NewRoundRobin(reg)
+	p := proxy.New(rr, cfg.Server.WriteTimeout)
 
 	server := &http.Server{
 		Addr: cfg.Server.Port,
