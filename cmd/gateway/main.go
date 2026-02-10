@@ -4,9 +4,11 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/Saad7890-web/self-healing-gateway/internal/balancer"
 	"github.com/Saad7890-web/self-healing-gateway/internal/config"
+	"github.com/Saad7890-web/self-healing-gateway/internal/health"
 	"github.com/Saad7890-web/self-healing-gateway/internal/proxy"
 	"github.com/Saad7890-web/self-healing-gateway/internal/registry"
 )
@@ -27,6 +29,9 @@ func main() {
 			URL: u,
 		})
 	}
+
+	checker := health.New(reg, 5*time.Second, 2*time.Second)
+	checker.Start()
 	rr := balancer.NewRoundRobin(reg)
 	p := proxy.New(rr, cfg.Server.WriteTimeout)
 
