@@ -19,7 +19,7 @@ func NewRoundRobin(reg *registry.Registry) *RoundRobin{
 }
 
 func (rr *RoundRobin) Next() (*registry.Service, error){
-	services := rr.registry.List()
+	services := rr.registry.HealthyServices()
 	if len(services) == 0 {
 		return nil, errors.New("No backend available")
 	}
