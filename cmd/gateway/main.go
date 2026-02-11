@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Saad7890-web/self-healing-gateway/internal/balancer"
+	"github.com/Saad7890-web/self-healing-gateway/internal/circuitbreaker"
 	"github.com/Saad7890-web/self-healing-gateway/internal/config"
 	"github.com/Saad7890-web/self-healing-gateway/internal/health"
 	"github.com/Saad7890-web/self-healing-gateway/internal/proxy"
@@ -27,6 +28,10 @@ func main() {
 		reg.Add(&registry.Service{
 			ID: b.ID,
 			URL: u,
+			Breaker: circuitbreaker.New(
+				3,
+				10*time.Second,
+			),
 		})
 	}
 
