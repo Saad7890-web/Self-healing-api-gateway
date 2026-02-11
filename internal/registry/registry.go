@@ -4,6 +4,8 @@ import (
 	"net/url"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Saad7890-web/self-healing-gateway/internal/circuitbreaker"
 )
 
 type Status int32
@@ -17,6 +19,7 @@ type Service struct {
 	ID     string
 	URL    *url.URL
 	status atomic.Int32
+	Breaker *circuitbreaker.Breaker
 }
 
 func (s *Service) SetStatus(st Status) {
