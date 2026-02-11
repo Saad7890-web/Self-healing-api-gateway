@@ -28,7 +28,10 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No backend available", http.StatusServiceUnavailable)
 		return
 	}
-
+	if !services.Breaker.Allow(){
+		http.Error(w, "Service temporarily unavailable", http.StatusServiceUnavailable)
+		return
+	}
 	rp := httputil.NewSingleHostReverseProxy(services.URL)
 
 	rp.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
