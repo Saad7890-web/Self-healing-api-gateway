@@ -51,3 +51,15 @@ func(b *Breaker)Success(){
 	b.failures = 0
 	b.state = Closed
 }
+
+func(b *Breaker) Failure(){
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.failures++
+	b.lastFailure = time.Now()
+
+	if b.failures >= b.failureLimit {
+		b.state = Open
+	}
+}
